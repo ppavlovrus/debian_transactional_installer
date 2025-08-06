@@ -1,0 +1,73 @@
+package:
+  name: "my-web-app"
+  version: "1.0.0"
+  description: "A simple web application"
+  author: "Developer"
+  license: "MIT"
+
+install_steps:
+  - type: "apt_package"
+    action: "install"
+    packages: ["nginx", "python3", "python3-pip"]
+    rollback: "auto"
+    description: "Install required packages"
+
+  - type: "file_copy"
+    src: "./app.conf"
+    dest: "/etc/nginx/sites-available/webapp.conf"
+    owner: "root"
+    group: "root"
+    mode: "644"
+    rollback: "auto"
+    description: "Copy nginx configuration"
+
+  - type: "systemd_service"
+    service: "nginx"
+    action: "enable"
+    rollback: "auto"
+    description: "Enable nginx service"
+
+  - type: "systemd_service"
+    service: "nginx"
+    action: "start"
+    rollback: "auto"
+    description: "Start nginx service"
+
+  - type: "user_management"
+    username: "webapp"
+    action: "create"
+    user_data:
+      home: "/var/www/webapp"
+      shell: "/bin/bash"
+      groups: ["www-data"]
+    rollback: "auto"
+    description: "Create webapp user"
+
+  - type: "ansible_playbook"
+    playbook: "setup_db.yml"
+    rollback_playbook: "cleanup_db.yml"
+    vars:
+      db_name: "webapp"
+      db_user: "webapp"
+    rollback: "ansible"
+    description: "Setup database using Ansible"
+
+pre_install:
+  - type: "script"
+    script: "check_disk_space.sh"
+
+post_install:
+  - type: "script"
+    script: "post_install.sh"
+
+dependencies:
+  - "debian-11"
+
+conflicts:
+  - "apache2"
+
+requirements:
+  min_memory: 512
+  min_disk_space: 1000
+  os_version: "11.0"
+  architectures: ["amd64", "arm64"] 

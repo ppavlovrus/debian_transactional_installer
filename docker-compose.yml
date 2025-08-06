@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  transactional-installer:
+    build: .
+    container_name: transactional-installer
+    volumes:
+      - installer_data:/var/lib/transactional-installer
+      - installer_logs:/var/log/transactional-installer
+      - installer_config:/etc/transactional-installer
+      - ./ansible_playbooks:/etc/transactional-installer/ansible:ro
+      - ./packages:/packages:ro
+    environment:
+      - PYTHONPATH=/app
+    command: ["transactional-installer", "status"]
+    restart: unless-stopped
+    privileged: true  # Required for systemd operations
+    cap_add:
+      - SYS_ADMIN  # Required for some system operations
+
+  test-runner:
+    build: .
+    container_name: transactional-installer-test
+    volumes:
+      - installer_data:/var/lib/transactional-installer
+      - installer_logs:/var/log/transactional-installer
+      - installer_config:/etc/transactional-installer
+      - ./ansible_playbooks:/etc/transactional-installer/ansible:ro
+      - ./packages:/packages:ro
+      - ./tests:/app/tests:ro
+    environment:
+      - PYTHONPATH=/app
+      - PYTEST_ADDOPTS=--tb=short
+    command: ["pytest", "-v", "--cov=core", "--cov=backends", "--cov=storage", "--cov=metadata", "--cov=cli"]
+    depends_on:
+      - transactional-installer
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+
+volumes:
+  installer_data:
+    driver: local
+  installer_logs:
+    driver: local
+  installer_config:
+    driver: local 

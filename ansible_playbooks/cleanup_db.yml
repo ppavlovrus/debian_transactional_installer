@@ -1,0 +1,29 @@
+---
+- name: Cleanup database for web application
+  hosts: localhost
+  become: yes
+  vars:
+    db_name: "{{ db_name | default('webapp') }}"
+    db_user: "{{ db_user | default('webapp') }}"
+
+  tasks:
+    - name: Drop database user
+      postgresql_user:
+        name: "{{ db_user }}"
+        state: absent
+
+    - name: Drop database
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: absent
+
+    - name: Stop PostgreSQL service
+      systemd:
+        name: postgresql
+        state: stopped
+
+    - name: Remove PostgreSQL packages
+      apt:
+        name: postgresql postgresql-contrib
+        state: absent
+        autoremove: yes 
