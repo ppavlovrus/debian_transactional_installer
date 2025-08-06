@@ -18,14 +18,18 @@ logger = logging.getLogger(__name__)
 class StateTracker:
     """Tracks system state and creates snapshots for rollback."""
 
-    def __init__(self, snapshot_dir: str = "/var/lib/transactional-installer/snapshots"):
+    def __init__(self, snapshot_dir: str = None):
         """Initialize state tracker.
 
         Args:
-            snapshot_dir: Directory to store snapshots
+            snapshot_dir: Directory to store snapshots (defaults to temp directory if not provided)
         """
-        self.snapshot_dir = Path(snapshot_dir)
-        self.snapshot_dir.mkdir(parents=True, exist_ok=True)
+        if snapshot_dir is None:
+            import tempfile
+            self.snapshot_dir = Path(tempfile.mkdtemp(prefix="transactional_installer_"))
+        else:
+            self.snapshot_dir = Path(snapshot_dir)
+            self.snapshot_dir.mkdir(parents=True, exist_ok=True)
 
     def create_snapshot(self, step: Dict[str, Any]) -> Dict[str, Any]:
         """Create a snapshot of current system state based on step type.

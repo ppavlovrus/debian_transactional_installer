@@ -147,15 +147,13 @@ class TransactionManager:
             
             # Get failed step and all previous steps
             steps = self.db.get_transaction_steps(self.current_transaction_id)
+            snapshots = self.db.get_transaction_snapshots(self.current_transaction_id)
             
             # Execute rollback in reverse order
-            self.rollback_engine.execute_rollback(
-                transaction_id=self.current_transaction_id,
-                steps=steps
-            )
+            self.rollback_engine.rollback_transaction(steps, snapshots)
             
             # Mark transaction as rolled back
-            self.db.rollback_transaction(self.current_transaction_id)
+            self.db.update_transaction_status(self.current_transaction_id, "rolled_back")
             
             logger.info(f"Transaction {self.current_transaction_id} rolled back successfully")
             

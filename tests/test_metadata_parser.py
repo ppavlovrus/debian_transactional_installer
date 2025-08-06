@@ -63,7 +63,7 @@ class TestMetadataParser:
             }
         }
         
-        with pytest.raises(ValidationError):
+        with pytest.raises(MetadataError):
             self.parser.parse_string(self._metadata_to_yaml(invalid_metadata))
 
     def test_parse_file(self):

@@ -66,6 +66,9 @@ class TestTransactionManager:
         mock_executor.execute_step.return_value = {"success": True}
         mock_step_executor.return_value = mock_executor
         
+        # Recreate manager with mocked step executor
+        self.manager = TransactionManager(db_path=self.temp_db.name)
+        
         # Begin transaction
         transaction_id = self.manager.begin_transaction(
             package_name="test-package",
@@ -93,6 +96,9 @@ class TestTransactionManager:
         mock_executor = Mock()
         mock_executor.execute_step.side_effect = Exception("Step failed")
         mock_step_executor.return_value = mock_executor
+        
+        # Recreate manager with mocked step executor
+        self.manager = TransactionManager(db_path=self.temp_db.name)
         
         # Begin transaction
         transaction_id = self.manager.begin_transaction(
@@ -171,8 +177,8 @@ class TestTransactionManager:
 
     def test_get_nonexistent_transaction_status(self):
         """Test getting status of nonexistent transaction."""
-        with pytest.raises(Exception):
-            self.manager.get_transaction_status(999)
+        status = self.manager.get_transaction_status(999)
+        assert status["status"] == "not_found"
 
     def test_list_transactions(self):
         """Test listing transactions."""

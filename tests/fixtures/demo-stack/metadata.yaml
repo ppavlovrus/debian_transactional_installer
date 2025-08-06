@@ -1,0 +1,22 @@
+package:
+  name: "demo-stack"
+  version: "0.1"
+install_steps:
+  - type: "apt_package"
+    action: "install"
+    packages: ["nginx"]
+    rollback: "remove_packages"
+
+  - type: "file_copy"
+    src: "./testsite/index.html"
+    dest: "/var/www/testsite/index.html"
+    rollback: "restore_original"
+
+  - type: "file_copy"
+    src: "./testsite/nginx.conf"
+    dest: "/etc/nginx/sites-enabled/testsite.conf"
+    rollback: "restore_original"
+
+  - type: "custom_script"
+    script: "create_db.sh"
+    rollback_script: "delete_db.sh" 
