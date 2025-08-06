@@ -1,0 +1,107 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'tests/test_integration_*.py'
+      - 'tests/fixtures/**'
+      - 'core/**'
+      - 'storage/**'
+      - 'backends/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'tests/test_integration_*.py'
+      - 'tests/fixtures/**'
+      - 'core/**'
+      - 'storage/**'
+      - 'backends/**'
+  workflow_dispatch:
+
+jobs:
+  demo-stack-integration:
+    runs-on: ubuntu-latest
+    name: Demo Stack Integration Tests
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sqlite3 ansible sqlite3-dev
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install -e .
+
+    - name: Run demo stack integration tests
+      run: |
+        pytest tests/test_integration_demo_stack.py -v --cov=core --cov=backends --cov=storage --cov-report=html --cov-report=term-missing
+
+    - name: Run demo stack fixture tests
+      run: |
+        pytest tests/test_integration_demo_stack_fixtures.py -v
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: demo-stack-coverage-${{ github.run_number }}
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Test coverage threshold
+      run: |
+        pytest tests/test_integration_demo_stack.py --cov=core --cov=backends --cov=storage --cov-fail-under=20
+
+  all-integration:
+    runs-on: ubuntu-latest
+    name: All Integration Tests
+    needs: demo-stack-integration
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sqlite3 ansible sqlite3-dev
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install -e .
+
+    - name: Run all integration tests
+      run: |
+        pytest tests/test_integration_*.py -v --cov=core --cov=backends --cov=storage --cov=metadata --cov=cli --cov-report=html --cov-report=term-missing
+
+    - name: Upload full integration coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: full-integration-coverage-${{ github.run_number }}
+        path: htmlcov/
+        retention-days: 30 

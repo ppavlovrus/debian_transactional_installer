@@ -1,5 +1,4 @@
 pyyaml>=6.0
 ansible-runner>=2.3.0
 click>=8.0
-jsonschema>=4.0
-sqlite3 
+jsonschema>=4.0 

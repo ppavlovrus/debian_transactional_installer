@@ -24,7 +24,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y sqlite3 ansible
+        sudo apt-get install -y sqlite3 ansible sqlite3-dev
 
     - name: Cache pip dependencies
       uses: actions/cache@v3
@@ -51,7 +51,7 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest -v --cov=core --cov=backends --cov=storage --cov=metadata --cov=cli --cov-report=xml
+        pytest -v --cov=core --cov=backends --cov=storage --cov=metadata --cov=cli --cov-report=xml --cov-report=html
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -59,6 +59,13 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
 
   docker:
     runs-on: ubuntu-latest
@@ -91,9 +98,9 @@ jobs:
         bandit -r core/ backends/ storage/ metadata/ cli/
         safety check
 
-  integration:
+  test-all:
     runs-on: ubuntu-latest
-    needs: [test, docker]
+    needs: test
 
     steps:
     - uses: actions/checkout@v3
@@ -103,13 +110,64 @@ jobs:
       with:
         python-version: 3.11
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sqlite3 ansible sqlite3-dev
+
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Run integration tests
+    - name: Run all tests with coverage
+      run: |
+        pytest tests/ -v --cov=core --cov=backends --cov=storage --cov=metadata --cov=cli --cov-report=html --cov-report=xml --cov-report=term-missing
+
+    - name: Upload full test coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: full-test-coverage
+        path: htmlcov/
+        retention-days: 30
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: [test, docker, test-all]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sqlite3 ansible sqlite3-dev
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install -e .
+
+    - name: Run demo stack integration tests
+      run: |
+        pytest tests/test_integration_demo_stack.py -v --cov=core --cov=backends --cov=storage --cov-report=html
+        pytest tests/test_integration_demo_stack_fixtures.py -v
+
+    - name: Upload demo stack test coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: demo-stack-coverage
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Run CLI integration tests
       run: |
         # Create test package
         transactional-installer create-template test-integration 1.0.0 -o test-package.yml
