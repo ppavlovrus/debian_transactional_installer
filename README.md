@@ -355,8 +355,18 @@ Apache License 2.0 - см. файл [LICENSE](LICENSE).
 4. Отправьте в ветку (`git push origin feature/amazing-feature`)
 5. Откройте Pull Request
 
-## Поддержка
+## Documentation
 
-- Документация: [docs/](docs/)
-- Issues: [GitHub Issues](https://github.com/your-org/debian_transactional_installer/issues)
-- Обсуждения: [GitHub Discussions](https://github.com/your-org/debian_transactional_installer/discussions)
+Comprehensive documentation is available in the [docs/](docs/) directory:
+
+- **[📖 User Guide](docs/user-guide.md)** - Complete user guide with step-by-step instructions
+- **[🏗️ Architecture](docs/architecture.md)** - System architecture and design documentation  
+- **[📚 API Reference](docs/api-reference.md)** - Complete API documentation for all modules
+- **[💡 Examples](docs/examples.md)** - Comprehensive examples for various use cases
+
+## Support
+
+- **Documentation**: Start with the [User Guide](docs/user-guide.md)
+- **Examples**: Check the [Examples](docs/examples.md) for common use cases
+- **Issues**: [GitHub Issues](https://github.com/your-org/debian_transactional_installer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/debian_transactional_installer/discussions)

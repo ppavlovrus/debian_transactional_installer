@@ -33,6 +33,15 @@ clean: ## Clean up generated files
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	rm -rf build/ dist/ htmlcov/ .coverage .pytest_cache/
+	rm -rf docs/build/
+
+docs: ## Build documentation
+	@echo "Building documentation..."
+	@./scripts/build-docs.sh
+
+docs-serve: docs ## Build and serve documentation locally
+	@echo "Serving documentation at http://localhost:8000"
+	@cd docs/build && python3 -m http.server 8000
 
 docker-build: ## Build Docker image
 	docker build -t transactional-installer .
